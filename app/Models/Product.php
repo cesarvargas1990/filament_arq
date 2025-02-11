@@ -21,5 +21,10 @@ class Product extends Model
         return $this->belongsToMany(Category::class, 'category_product')
                     ->withTimestamps();
     }
+
+    public function empresa()
+    {
+        return $this->belongsTo(Empresa::class);
+    }
     
 }

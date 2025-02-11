@@ -13,6 +13,7 @@ use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class ProductResource extends Resource
 {
@@ -93,4 +94,24 @@ class ProductResource extends Resource
             'edit' => Pages\EditProduct::route('/{record}/edit'),
         ];
     }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (Auth::check() && Auth::user()->role->nombre_rol === 'vendedor') {
+            // Obtén los IDs de las categorías asignadas al usuario (vendedor)
+            $categoryIds = Auth::user()->categories->pluck('id')->toArray();
+
+            $query->whereHas('categories', function ($q) use ($categoryIds) {
+                // Especifica el nombre de la tabla "categories" para evitar ambigüedades
+                $q->whereIn('categories.id', $categoryIds);
+            });
+        }
+
+        return $query;
+    }
+
+
+   
 }
