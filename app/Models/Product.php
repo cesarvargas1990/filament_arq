@@ -11,12 +11,15 @@ class Product extends Model
     use HasFactory;
     protected $fillable = [
         'nombre_producto',
-        'precio',
-        'empresa_id',
+        'precio'
     ];
 
-    public function empresa()
+    
+
+    public function categories()
     {
-        return $this->belongsTo(Empresa::class);
+        return $this->belongsToMany(Category::class, 'category_product')
+                    ->withTimestamps();
     }
+    
 }

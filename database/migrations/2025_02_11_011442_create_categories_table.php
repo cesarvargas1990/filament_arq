@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('products', function (Blueprint $table) {
+        Schema::create('categories', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre_producto');
-           
-            $table->decimal('precio', 10, 2);
+            $table->string('nombre_categoria');
+            // Se agrega la columna empresa_id como clave foránea a la tabla empresas
+            $table->foreignId('empresa_id')
+                  ->nullable()
+                  ->constrained('empresas')
+                  ->nullOnDelete();
             $table->timestamps();
         });
     }
@@ -25,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('products');
+        Schema::dropIfExists('categories');
     }
 };

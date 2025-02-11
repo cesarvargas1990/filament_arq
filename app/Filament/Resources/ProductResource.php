@@ -25,11 +25,7 @@ class ProductResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('nombre_producto')
                     ->required(),
-                    Forms\Components\Select::make('empresa_id')
-                    ->label('Empresa')
-                    ->relationship('empresa', 'nombre_empresa')
-                    ->searchable()
-                    ->required(),
+                   
                 Forms\Components\TextInput::make('precio')
                     ->required()
                     ->numeric(),
@@ -42,10 +38,7 @@ class ProductResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('nombre_producto')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('role.nombre_rol')
-                    ->label('Rol')
-                    ->searchable()
-                    ->sortable(),
+                
                 Tables\Columns\TextColumn::make('precio')
                     ->numeric()
                     ->sortable(),
