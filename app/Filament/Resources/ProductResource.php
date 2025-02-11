@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -22,46 +23,59 @@ class ProductResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
-                Forms\Components\TextInput::make('nombre_producto')
-                    ->required(),
-                   
-                Forms\Components\TextInput::make('precio')
-                    ->required()
-                    ->numeric(),
-            ]);
+        ->schema([
+            // Campo para el nombre del producto.
+            Forms\Components\TextInput::make('nombre_producto')
+                ->required(),
+            // Campo para el precio.
+            Forms\Components\TextInput::make('precio')
+                ->required()
+                ->numeric(),
+            // Selector múltiple para asignar categorías al producto.
+            Forms\Components\Select::make('categories')
+                ->label('Categorías')
+                ->relationship('categories', 'nombre_categoria')
+                ->multiple()      // Permite seleccionar más de una categoría
+                ->searchable()    // Permite búsqueda en la lista de categorías
+                ->preload(),      // Opcional: carga las opciones al inicio
+        ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('nombre_producto')
-                    ->searchable(),
-                
-                Tables\Columns\TextColumn::make('precio')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                //
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+        ->columns([
+            // Columna para el nombre del producto.
+            Tables\Columns\TextColumn::make('nombre_producto')
+                ->searchable(),
+            // Columna para el precio.
+            Tables\Columns\TextColumn::make('precio')
+                ->numeric()
+                ->sortable(),
+            // Columna para mostrar las categorías asociadas, usando TagsColumn.
+            TagsColumn::make('categories.nombre_categoria')
+                ->label('Categorías')
+                ->separator(', '), // Opcional: separa cada etiqueta con una coma
+            Tables\Columns\TextColumn::make('created_at')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+            Tables\Columns\TextColumn::make('updated_at')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+        ])
+        ->filters([
+            //
+        ])
+        ->actions([
+            Tables\Actions\EditAction::make(),
+        ])
+        ->bulkActions([
+            Tables\Actions\BulkActionGroup::make([
+                Tables\Actions\DeleteBulkAction::make(),
+            ]),
+        ]);
     }
 
     public static function getRelations(): array
