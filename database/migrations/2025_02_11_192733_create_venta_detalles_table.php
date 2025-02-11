@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('venta_id')->constrained('ventas')->cascadeOnDelete();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
             // Precio del item (por ejemplo, el precio unitario o el total de ese item)
-            $table->decimal('price', 10, 2);
+            $table->unsignedInteger('cantidad')->default(1);
             $table->timestamps();
         });
     }

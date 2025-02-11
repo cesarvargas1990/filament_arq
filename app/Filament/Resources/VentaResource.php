@@ -5,42 +5,71 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\VentaResource\Pages;
 use App\Models\Venta;
 use Filament\Forms;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Columns\TagsColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class VentaResource extends Resource
 {
     protected static ?string $model = Venta::class;
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
 
     public static function form(Form $form): Form
     {
         return $form->schema([
-            // Asigna el usuario actual (oculto)
-            Forms\Components\Hidden::make('user_id')
+            // Campo oculto: usuario actual
+            Hidden::make('user_id')
                 ->default(fn () => auth()->id()),
-            // Campo read-only para mostrar el total de la venta (se actualizará automáticamente)
+            // Campo "Total": read-only; se calculará sumando los totales de cada detalle
             TextInput::make('total')
                 ->label('Total')
                 ->disabled()
-                ->default(0),
-            // Repeater para agregar los detalles de la venta.
+                ->default(0)
+                ->reactive()
+                ->afterStateHydrated(function ($state, callable $set, callable $get) {
+                    $detalles = $get('detalles') ?? [];
+                    $sum = 0;
+                    foreach ($detalles as $item) {
+                        if (!empty($item['product_id']) && !empty($item['cantidad'])) {
+                            $product = \App\Models\Product::find($item['product_id']);
+                            if ($product) {
+                                $sum += $product->precio * $item['cantidad'];
+                            }
+                        }
+                    }
+                    $set('total', $sum);
+                })
+                ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                    $detalles = $get('detalles') ?? [];
+                    $sum = 0;
+                    foreach ($detalles as $item) {
+                        if (!empty($item['product_id']) && !empty($item['cantidad'])) {
+                            $product = \App\Models\Product::find($item['product_id']);
+                            if ($product) {
+                                $sum += $product->precio * $item['cantidad'];
+                            }
+                        }
+                    }
+                    $set('total', $sum);
+                }),
+            // Repeater para agregar detalles de la venta
             Repeater::make('detalles')
                 ->relationship('detalles')
                 ->schema([
-                    // Selector para Producto. Se filtra para que sólo se muestren productos de las categorías asignadas al usuario.
-                    Forms\Components\Select::make('product_id')
+                    // Selector para Producto
+                    Select::make('product_id')
                         ->label('Producto')
                         ->relationship('product', 'nombre_producto', function ($query) {
                             $user = auth()->user();
-                            // Si el usuario es vendedor, filtrar los productos por las categorías asignadas al usuario.
+                            // Si el usuario es vendedor, filtrar productos por las categorías asignadas al usuario.
                             if ($user && $user->role->nombre_rol === 'vendedor') {
                                 $categoryIds = $user->categories->pluck('id')->toArray();
                                 return $query->whereHas('categories', function ($q) use ($categoryIds) {
@@ -50,27 +79,45 @@ class VentaResource extends Resource
                             return $query;
                         })
                         ->searchable()
-                        ->required(),
-                    // Campo para el precio del producto (por item)
-                    TextInput::make('price')
-                        ->label('Precio')
+                        ->required()
+                        ->reactive(),
+                    // Campo para la Cantidad (en lugar de precio)
+                    TextInput::make('cantidad')
+                        ->label('Cantidad')
                         ->numeric()
-                        ->required(),
+                        ->default(1)
+                        ->required()
+                        ->reactive(),
                 ])
                 ->columns(2)
                 ->default([]) // Comienza sin ítems
-                ->columnSpan('full'),
+                ->columnSpan('full')
+                ->reactive()
+                ->afterStateUpdated(function (callable $get, callable $set, $state) {
+                    // Recalcula el total cada vez que cambia el repeater
+                    $detalles = $get('detalles') ?? [];
+                    $sum = 0;
+                    foreach ($detalles as $item) {
+                        if (!empty($item['product_id']) && !empty($item['cantidad'])) {
+                            $product = \App\Models\Product::find($item['product_id']);
+                            if ($product) {
+                                $sum += $product->precio * $item['cantidad'];
+                            }
+                        }
+                    }
+                    $set('total', $sum);
+                }),
         ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table->columns([
-            // Mostrar el usuario que realizó la venta
+            // Muestra el nombre del usuario (vendedor) que realizó la venta
             TextColumn::make('user.name')
                 ->label('Vendedor')
                 ->searchable(),
-            // Mostrar el total de la venta
+            // Muestra el total de la venta
             TextColumn::make('total')
                 ->label('Total')
                 ->money('USD'),
@@ -87,6 +134,7 @@ class VentaResource extends Resource
         ]);
     }
 
+    // Filtra la consulta para que solo se muestren las ventas del usuario actual.
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->where('user_id', auth()->id());
