@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Role;
 use App\Models\RolePermission;
+use Illuminate\Support\Facades\DB;
 
 class RolePermissionsSeeder extends Seeder
 {
@@ -43,5 +44,12 @@ class RolePermissionsSeeder extends Seeder
                 'resource' => $resource,
             ]);
         }
+
+        DB::table('role_permissions')->insert([
+            'role_id'    => 2,           // Rol 2 (vendedor, por ejemplo)
+            'resource'   => 'ventas',    // El nombre que asignamos al resource de ventas
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 }
