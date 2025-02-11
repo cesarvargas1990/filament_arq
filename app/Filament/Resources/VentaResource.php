@@ -29,7 +29,6 @@ class VentaResource extends Resource
             Hidden::make('user_id')
                 ->default(fn () => auth()->id()),
             // Campo "Total": read-only; se calculará sumando los totales de cada detalle.
-            // Se fuerza que se incluya en el formulario (dehydrated true) para que se guarde el valor.
             TextInput::make('total')
                 ->label('Total')
                 ->disabled()
@@ -37,6 +36,10 @@ class VentaResource extends Resource
                 ->default(0)
                 ->reactive()
                 ->afterStateHydrated(function ($state, callable $set, callable $get) {
+                    // Si ya existe un total (es decir, al editar) y es mayor que 0, se conserva.
+                    if ($state && $state > 0) {
+                        return;
+                    }
                     $detalles = $get('detalles') ?? [];
                     $sum = 0;
                     foreach ($detalles as $item) {
