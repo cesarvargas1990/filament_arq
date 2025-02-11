@@ -35,8 +35,18 @@ class ProductResource extends Resource
             // Selector múltiple para asignar categorías al producto.
             Forms\Components\Select::make('categories')
                 ->label('Categorías')
-                ->relationship('categories', 'nombre_categoria')
-                ->multiple()      // Permite seleccionar más de una categoría
+                ->relationship(
+                    'categories',
+                    'nombre_categoria',
+                    function ($query) {
+                        if (Auth::check() && Auth::user()->role->nombre_rol === 'vendedor') {
+                            // Especificamos "categories.id" para evitar ambigüedad
+                            return $query->whereIn('categories.id', Auth::user()->categories->pluck('id')->toArray());
+                        }
+                        return $query;
+                    }
+                )
+                ->multiple()      // Permite seleccionar varias categorías
                 ->searchable()    // Permite búsqueda en la lista de categorías
                 ->preload(),      // Opcional: carga las opciones al inicio
         ]);
