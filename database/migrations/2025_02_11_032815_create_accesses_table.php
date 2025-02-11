@@ -13,21 +13,14 @@ return new class extends Migration
     {
         Schema::create('accesses', function (Blueprint $table) {
             $table->id();
-            // Relación con la tabla 'users'
-            $table->foreignId('user_id')
-                  ->constrained()
-                  ->cascadeOnDelete();
-            // Relación con la tabla 'categories'
-            $table->foreignId('category_id')
-                  ->constrained()
-                  ->cascadeOnDelete();
+            // Clave foránea a la tabla users
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            // Clave foránea a la tabla categories
+            $table->foreignId('category_id')->constrained('categories')->cascadeOnDelete();
             $table->timestamps();
         });
     }
 
-    /**
-     * Revierte las migraciones.
-     */
     public function down(): void
     {
         Schema::dropIfExists('accesses');

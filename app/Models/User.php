@@ -63,4 +63,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class);
     }
+
+    public function categories()
+    {
+        return $this->belongsToMany(\App\Models\Category::class, 'accesses');
+    }
 }

@@ -30,4 +30,9 @@ class Category extends Model
         return $this->belongsToMany(Product::class, 'category_product')
                     ->withTimestamps();
     }
+
+    public function users()
+    {
+        return $this->belongsToMany(\App\Models\User::class, 'accesses');
+    }
 }
