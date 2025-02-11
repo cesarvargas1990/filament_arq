@@ -20,6 +20,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'empresa_id',
+        'role_id',
         'password',
     ];
 
@@ -44,5 +46,21 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Relación: Un usuario pertenece a una empresa.
+     */
+    public function empresa()
+    {
+        return $this->belongsTo(Empresa::class);
+    }
+
+    /**
+     * Relación: Un usuario pertenece a un rol.
+     */
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
     }
 }
