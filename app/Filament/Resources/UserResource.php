@@ -40,17 +40,19 @@ class UserResource extends Resource
                     ->required(),
                 // Fecha de verificación de email
                 Forms\Components\DateTimePicker::make('email_verified_at'),
-                // Contraseña
+                // Contraseña: visible solo en creación
                 Forms\Components\TextInput::make('password')
                     ->password()
-                    ->required(),
-                // **Nuevo campo:** Asignar categorías a las que tiene acceso el usuario.
+                    ->visible(fn(string $context): bool => $context === 'create')
+                    ->required(fn($context) => $context === 'create')
+                    ->helperText('El password se establece al crear el usuario.'),
+                // Asignación de categorías (relación many‑to‑many)
                 Forms\Components\Select::make('categories')
                     ->label('Categorías de acceso')
                     ->relationship('categories', 'nombre_categoria')
                     ->multiple()       // Permite seleccionar varias categorías
                     ->searchable()     // Permite búsqueda en la lista de categorías
-                    ->preload(),       // Opcional: carga las opciones al inicio
+                    ->preload(),       // Opcional: carga las opciones de inmediato
             ]);
     }
 
@@ -71,7 +73,7 @@ class UserResource extends Resource
                 ->label('Rol')
                 ->searchable()
                 ->sortable(),
-            // **Nueva columna:** Mostrar las categorías asignadas
+            // Columna para mostrar las categorías asignadas
             Tables\Columns\TagsColumn::make('categories.nombre_categoria')
                 ->label('Categorías de acceso')
                 ->separator(', '),
@@ -103,7 +105,7 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
-            // Si lo deseas, aquí puedes agregar RelationManagers para otras relaciones.
+            // Puedes agregar RelationManagers aquí si lo deseas.
         ];
     }
 
