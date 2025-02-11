@@ -29,4 +29,14 @@ class Role extends Model
     {
         return $this->belongsTo(Empresa::class);
     }
+
+    public function permissions()
+    {
+        return $this->hasMany(RolePermission::class);
+    }
+
+    public function hasPermission(string $resource): bool
+    {
+        return $this->permissions()->where('resource', $resource)->exists();
+    }
 }
