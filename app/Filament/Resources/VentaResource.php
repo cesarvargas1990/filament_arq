@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\VentaResource\Pages;
-use App\Filament\Resources\VentaResource\RelationManagers;
 use App\Models\Venta;
 use Filament\Forms;
 use Filament\Forms\Components\Repeater;
@@ -11,14 +10,14 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TagsColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class VentaResource extends Resource
 {
     protected static ?string $model = Venta::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
@@ -59,7 +58,7 @@ class VentaResource extends Resource
                         ->required(),
                 ])
                 ->columns(2)
-                ->default([]) // Comienza sin items
+                ->default([]) // Comienza sin ítems
                 ->columnSpan('full'),
         ]);
     }
@@ -68,25 +67,29 @@ class VentaResource extends Resource
     {
         return $table->columns([
             // Mostrar el usuario que realizó la venta
-            Tables\Columns\TextColumn::make('user.name')
+            TextColumn::make('user.name')
                 ->label('Vendedor')
                 ->searchable(),
             // Mostrar el total de la venta
-            Tables\Columns\TextColumn::make('total')
+            TextColumn::make('total')
                 ->label('Total')
                 ->money('USD'),
-            Tables\Columns\TextColumn::make('created_at')
+            TextColumn::make('created_at')
                 ->dateTime()
                 ->sortable(),
         ])
         ->filters([])
         ->actions([
             Tables\Actions\EditAction::make(),
-            // Puedes agregar acciones de ver detalle, etc.
         ])
         ->bulkActions([
             Tables\Actions\DeleteBulkAction::make(),
         ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where('user_id', auth()->id());
     }
 
     public static function getRelations(): array
@@ -99,9 +102,9 @@ class VentaResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListVentas::route('/'),
+            'index'  => Pages\ListVentas::route('/'),
             'create' => Pages\CreateVenta::route('/create'),
-            'edit' => Pages\EditVenta::route('/{record}/edit'),
+            'edit'   => Pages\EditVenta::route('/{record}/edit'),
         ];
     }
 }
