@@ -28,10 +28,12 @@ class VentaResource extends Resource
             // Campo oculto: usuario actual
             Hidden::make('user_id')
                 ->default(fn () => auth()->id()),
-            // Campo "Total": read-only; se calculará sumando los totales de cada detalle
+            // Campo "Total": read-only; se calculará sumando los totales de cada detalle.
+            // Se fuerza que se incluya en el formulario (dehydrated true) para que se guarde el valor.
             TextInput::make('total')
                 ->label('Total')
                 ->disabled()
+                ->dehydrated(true)
                 ->default(0)
                 ->reactive()
                 ->afterStateHydrated(function ($state, callable $set, callable $get) {
@@ -60,16 +62,15 @@ class VentaResource extends Resource
                     }
                     $set('total', $sum);
                 }),
-            // Repeater para agregar detalles de la venta
+            // Repeater para los detalles de la venta
             Repeater::make('detalles')
                 ->relationship('detalles')
                 ->schema([
-                    // Selector para Producto
+                    // Selector para Producto.
                     Select::make('product_id')
                         ->label('Producto')
                         ->relationship('product', 'nombre_producto', function ($query) {
                             $user = auth()->user();
-                            // Si el usuario es vendedor, filtrar productos por las categorías asignadas al usuario.
                             if ($user && $user->role->nombre_rol === 'vendedor') {
                                 $categoryIds = $user->categories->pluck('id')->toArray();
                                 return $query->whereHas('categories', function ($q) use ($categoryIds) {
@@ -80,8 +81,16 @@ class VentaResource extends Resource
                         })
                         ->searchable()
                         ->required()
-                        ->reactive(),
-                    // Campo para la Cantidad (en lugar de precio)
+                        ->reactive()
+                        ->afterStateUpdated(function (callable $get, callable $set, $state) {
+                            if ($state) {
+                                $product = \App\Models\Product::find($state);
+                                if ($product) {
+                                    $set('price', $product->precio);
+                                }
+                            }
+                        }),
+                    // Campo para la Cantidad
                     TextInput::make('cantidad')
                         ->label('Cantidad')
                         ->numeric()
@@ -94,7 +103,6 @@ class VentaResource extends Resource
                 ->columnSpan('full')
                 ->reactive()
                 ->afterStateUpdated(function (callable $get, callable $set, $state) {
-                    // Recalcula el total cada vez que cambia el repeater
                     $detalles = $get('detalles') ?? [];
                     $sum = 0;
                     foreach ($detalles as $item) {
@@ -113,7 +121,7 @@ class VentaResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            // Muestra el nombre del usuario (vendedor) que realizó la venta
+            // Muestra el usuario (vendedor) que realizó la venta
             TextColumn::make('user.name')
                 ->label('Vendedor')
                 ->searchable(),
