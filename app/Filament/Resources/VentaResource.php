@@ -4,18 +4,18 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\VentaResource\Pages;
 use App\Models\Venta;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Filament\Forms;
+use Filament\Forms\Form;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
 
 class VentaResource extends Resource
 {
@@ -25,18 +25,45 @@ class VentaResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            // Campo oculto: usuario actual
+            // Campo oculto: asigna el usuario actual.
             Hidden::make('user_id')
                 ->default(fn () => auth()->id()),
+            // Campo para seleccionar Cliente, con opción de crear uno nuevo mediante modal.
+            Select::make('cliente_id')
+                ->label('Cliente')
+                ->relationship('cliente', 'nombre')
+                ->searchable()
+                ->preload()
+                ->createOptionForm([
+                    TextInput::make('nombre')
+                        ->label('Nombre del Cliente')
+                        ->required(),
+                    TextInput::make('direccion')
+                        ->label('Dirección'),
+                    TextInput::make('telefono')
+                        ->label('Teléfono'),
+                ])
+                ->createOptionAction(function ($state = null) {
+                    // Aseguramos que $state sea un array
+                    $state = $state ?? [];
+                    // Si no se proporcionó un nombre, no se crea el cliente (la validación del formulario debería impedirlo)
+                    if (empty($state['nombre'])) {
+                        return null;
+                    }
+                    // Asignamos automáticamente la empresa del usuario actual y el nombre del usuario creador.
+                    $state['empresa_id'] = auth()->user()->empresa_id;
+                    $state['creado_por'] = auth()->user()->name;
+                    $cliente = \App\Models\Cliente::create($state);
+                    return $cliente->id;
+                }),
             // Campo "Total": read-only; se calculará sumando los totales de cada detalle.
             TextInput::make('total')
                 ->label('Total')
                 ->disabled()
-                ->dehydrated(true)
+                ->dehydrated(true) // Se fuerza que se incluya en la solicitud
                 ->default(0)
                 ->reactive()
                 ->afterStateHydrated(function ($state, callable $set, callable $get) {
-                    // Si ya existe un total (es decir, al editar) y es mayor que 0, se conserva.
                     if ($state && $state > 0) {
                         return;
                     }
@@ -65,7 +92,7 @@ class VentaResource extends Resource
                     }
                     $set('total', $sum);
                 }),
-            // Repeater para los detalles de la venta
+            // Repeater para los detalles de la venta.
             Repeater::make('detalles')
                 ->relationship('detalles')
                 ->schema([
@@ -73,7 +100,7 @@ class VentaResource extends Resource
                     Select::make('product_id')
                         ->label('Producto')
                         ->relationship('product', 'nombre_producto', function ($query) {
-                            $user = auth()->user();
+                            $user = Auth::user();
                             if ($user && $user->role->nombre_rol === 'vendedor') {
                                 $categoryIds = $user->categories->pluck('id')->toArray();
                                 return $query->whereHas('categories', function ($q) use ($categoryIds) {
@@ -89,11 +116,11 @@ class VentaResource extends Resource
                             if ($state) {
                                 $product = \App\Models\Product::find($state);
                                 if ($product) {
-                                    $set('price', $product->precio);
+                                    // Opcional: se podría mostrar el precio, pero en este ejemplo el total se calcula del precio del producto.
                                 }
                             }
                         }),
-                    // Campo para la Cantidad
+                    // Campo para la Cantidad.
                     TextInput::make('cantidad')
                         ->label('Cantidad')
                         ->numeric()
@@ -102,7 +129,7 @@ class VentaResource extends Resource
                         ->reactive(),
                 ])
                 ->columns(2)
-                ->default([]) // Comienza sin ítems
+                ->default([]) // Comienza sin ítems.
                 ->columnSpan('full')
                 ->reactive()
                 ->afterStateUpdated(function (callable $get, callable $set, $state) {
@@ -124,11 +151,15 @@ class VentaResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            // Muestra el usuario (vendedor) que realizó la venta
+            // Muestra el usuario (vendedor) que realizó la venta.
             TextColumn::make('user.name')
                 ->label('Vendedor')
                 ->searchable(),
-            // Muestra el total de la venta
+            // Muestra el cliente asignado.
+            TextColumn::make('cliente.nombre')
+                ->label('Cliente')
+                ->searchable(),
+            // Muestra el total de la venta.
             TextColumn::make('total')
                 ->label('Total')
                 ->money('USD'),
@@ -154,7 +185,7 @@ class VentaResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            // Puedes agregar RelationManagers si lo necesitas.
         ];
     }
 
