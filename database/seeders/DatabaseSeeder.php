@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             RolePermissionsSeeder::class,
+            EmpresaSeeder::class
             // Otros seeders...
         ]);
 
@@ -24,6 +25,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
             'role_id' => 2,
+            'empresa_id' => 1,
             'password' => bcrypt('password')
         ]);
 
@@ -31,6 +33,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'admin',
             'email' => 'admin@admin.com',
             'role_id' => 1,
+            'empresa_id' => 2,
             'password' => bcrypt('password')
         ]);
     }
