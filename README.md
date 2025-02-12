@@ -1,106 +1,66 @@
-🛒 Sistema de Ventas con Laravel, Filament y PDF
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-Este es un sistema de gestión de ventas construido con Laravel 11, Filament 3 y DomPDF. Permite gestionar productos, clientes y ventas, con la opción de generar facturas en PDF.
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
-🚀 Requisitos
+## About Laravel
 
-Antes de instalar el proyecto, asegúrate de tener:
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-PHP 8.1+
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-Composer 2.x
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-Node.js (Opcional, si usas frontend adicional)
+## Learning Laravel
 
-Base de datos SQLite / MySQL / PostgreSQL (configurable en .env)
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-⚙️ Instalación
+You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
 
-1️⃣ Clonar el Repositorio
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-git clone https://github.com/usuario/proyecto.git
-cd proyecto
+## Laravel Sponsors
 
-2️⃣ Instalar Dependencias
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 
-composer install
+### Premium Partners
 
-3️⃣ Configurar el Archivo .env
+- **[Vehikl](https://vehikl.com/)**
+- **[Tighten Co.](https://tighten.co)**
+- **[WebReinvent](https://webreinvent.com/)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
+- **[Cyber-Duck](https://cyber-duck.co.uk)**
+- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+- **[Jump24](https://jump24.co.uk)**
+- **[Redberry](https://redberry.international/laravel/)**
+- **[Active Logic](https://activelogic.com)**
+- **[byte5](https://byte5.de)**
+- **[OP.GG](https://op.gg)**
 
-Crea el archivo .env basado en .env.example:
+## Contributing
 
-cp .env.example .env
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-Luego, **edita el archivo **`` y configura la conexión a la base de datos.
+## Code of Conduct
 
-Ejemplo para SQLite:
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
-DB_CONNECTION=sqlite
-DB_DATABASE=/absolute/path/to/database.sqlite
+## Security Vulnerabilities
 
-Si usas MySQL, edita:
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=nombre_bd
-DB_USERNAME=usuario
-DB_PASSWORD=contraseña
+## License
 
-4️⃣ Generar la Clave de la Aplicación
-
-php artisan key:generate
-
-5️⃣ Migrar la Base de Datos y Poblarla con Datos Iniciales
-
-php artisan migrate --seed
-
-🖥️ Ejecutar el Proyecto
-
-Inicia el servidor de desarrollo de Laravel:
-
-php artisan serve
-
-Luego, accede a:
-
-🔗 http://localhost:8000/admin
-
-Usuario de prueba (Administrador):
-
-Email: admin@example.com
-
-Contraseña: password
-
-📜 Funcionalidades
-
-✔️ Gestión de Productos (CRUD con Filament)✔️ Gestión de Clientes (Creación rápida desde ventas)✔️ Gestión de Ventas (Relación con clientes y productos)✔️ Restricción de Accesos (Roles: Administrador y Vendedor)✔️ Filtración de Productos (Vendedores solo ven productos de sus categorías)✔️ Generación de Facturas en PDF✔️ Filament Admin Panel integrado
-
-📄 Generación de Facturas en PDF
-
-Para generar un PDF de una venta, sigue estos pasos:
-
-1️⃣ Ve a Filament Admin → Ventas2️⃣ En la tabla, haz clic en Descargar PDF3️⃣ Se generará un archivo PDF con los detalles de la venta
-
-🛠️ Comandos Útiles
-
-Actualizar dependencias
-
-composer update
-
-Reiniciar la base de datos
-
-php artisan migrate:fresh --seed
-
-Depurar y limpiar caché
-
-php artisan optimize:clear
-
-Ver las rutas del proyecto
-
-php artisan route:list
-
-🎯 Créditos
-
-Desarrollado por [Tu Nombre]📧 Contacto: tuemail@example.com
-
-🚀 ¡Listo! Ya puedes gestionar ventas y generar facturas en PDF con Laravel y Filament!
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
