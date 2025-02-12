@@ -38,6 +38,10 @@ class VentaResource extends Resource
                 ->searchable()
                 ->preload()
                 ->createOptionForm([
+                    Hidden::make('empresa_id')
+                        ->default(fn () => Auth::user()->empresa->id),
+                        Hidden::make('creado_por')
+                        ->default(fn () => Auth::user()->name),
                     TextInput::make('nombre')
                         ->label('Nombre del Cliente')
                         ->required(),
