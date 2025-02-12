@@ -32,12 +32,14 @@ class UserResource extends Resource
                     ->label('Empresa')
                     ->relationship('empresa', 'nombre_empresa')
                     ->searchable()
+                    ->preload()
                     ->required(),
                 // Rol
                 Forms\Components\Select::make('role_id')
                     ->label('Rol')
                     ->relationship('role', 'nombre_rol')
                     ->searchable()
+                    ->preload()
                     ->required(),
                 // Fecha de verificación de email
                 Forms\Components\DateTimePicker::make('email_verified_at'),

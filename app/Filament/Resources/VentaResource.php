@@ -13,7 +13,6 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables\Table;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 
@@ -25,7 +24,7 @@ class VentaResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            // Campo oculto: asigna el usuario actual.
+            // Campo oculto: asigna el usuario actual
             Hidden::make('user_id')
                 ->default(fn () => auth()->id()),
             // Campo para seleccionar Cliente, con opción de crear uno nuevo mediante modal.
@@ -35,32 +34,27 @@ class VentaResource extends Resource
                 ->searchable()
                 ->preload()
                 ->createOptionForm([
+                    \Filament\Forms\Components\Hidden::make('empresa_id')
+                    ->default(fn() => Auth::user()->empresa->id),
+                    \Filament\Forms\Components\Hidden::make('creado_por')
+                    ->default(fn() => Auth::user()->name),
                     TextInput::make('nombre')
                         ->label('Nombre del Cliente')
-                        ->required(),
+                        // Se quita la regla required para que la modal no valide inmediatamente
+                        ->statePath('nombre'),
                     TextInput::make('direccion')
-                        ->label('Dirección'),
+                        ->label('Dirección')
+                        ->statePath('direccion'),
                     TextInput::make('telefono')
-                        ->label('Teléfono'),
-                ])
-                ->createOptionAction(function ($state = null) {
-                    // Aseguramos que $state sea un array
-                    $state = $state ?? [];
-                    // Si no se proporcionó un nombre, no se crea el cliente (la validación del formulario debería impedirlo)
-                    if (empty($state['nombre'])) {
-                        return null;
-                    }
-                    // Asignamos automáticamente la empresa del usuario actual y el nombre del usuario creador.
-                    $state['empresa_id'] = auth()->user()->empresa_id;
-                    $state['creado_por'] = auth()->user()->name;
-                    $cliente = \App\Models\Cliente::create($state);
-                    return $cliente->id;
-                }),
+                        ->label('Teléfono')
+                        ->statePath('telefono'),
+                ]),
+              
             // Campo "Total": read-only; se calculará sumando los totales de cada detalle.
             TextInput::make('total')
                 ->label('Total')
                 ->disabled()
-                ->dehydrated(true) // Se fuerza que se incluya en la solicitud
+                ->dehydrated(true)
                 ->default(0)
                 ->reactive()
                 ->afterStateHydrated(function ($state, callable $set, callable $get) {
@@ -112,11 +106,12 @@ class VentaResource extends Resource
                         ->searchable()
                         ->required()
                         ->reactive()
+                        ->preload()
                         ->afterStateUpdated(function (callable $get, callable $set, $state) {
                             if ($state) {
                                 $product = \App\Models\Product::find($state);
                                 if ($product) {
-                                    // Opcional: se podría mostrar el precio, pero en este ejemplo el total se calcula del precio del producto.
+                                    // Opcional: se podría asignar el precio si fuera necesario.
                                 }
                             }
                         }),
@@ -129,7 +124,7 @@ class VentaResource extends Resource
                         ->reactive(),
                 ])
                 ->columns(2)
-                ->default([]) // Comienza sin ítems.
+                ->default([])
                 ->columnSpan('full')
                 ->reactive()
                 ->afterStateUpdated(function (callable $get, callable $set, $state) {
@@ -148,18 +143,15 @@ class VentaResource extends Resource
         ]);
     }
 
-    public static function table(Table $table): Table
+    public static function table(Tables\Table $table): Tables\Table
     {
         return $table->columns([
-            // Muestra el usuario (vendedor) que realizó la venta.
             TextColumn::make('user.name')
                 ->label('Vendedor')
                 ->searchable(),
-            // Muestra el cliente asignado.
             TextColumn::make('cliente.nombre')
                 ->label('Cliente')
                 ->searchable(),
-            // Muestra el total de la venta.
             TextColumn::make('total')
                 ->label('Total')
                 ->money('USD'),
@@ -176,7 +168,6 @@ class VentaResource extends Resource
         ]);
     }
 
-    // Filtra la consulta para que solo se muestren las ventas del usuario actual.
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->where('user_id', auth()->id());
@@ -184,9 +175,7 @@ class VentaResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            // Puedes agregar RelationManagers si lo necesitas.
-        ];
+        return [];
     }
 
     public static function getPages(): array

@@ -39,6 +39,7 @@ class CategoryResource extends Resource
                 ->label('Empresa')
                 ->relationship('empresa', 'nombre_empresa')
                 ->searchable()
+                ->preload()
                 ->required(),
 
             // Repeater para agregar productos desde la misma pantalla.
