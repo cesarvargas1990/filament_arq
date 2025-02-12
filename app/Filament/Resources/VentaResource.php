@@ -13,9 +13,12 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Tables\Table;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
+use Barryvdh\DomPDF\Facade as PDF;
+use Illuminate\Support\Facades\Storage;
+
 
 class VentaResource extends Resource
 {
@@ -112,6 +115,7 @@ class VentaResource extends Resource
                         ->searchable()
                         ->required()
                         ->reactive()
+                        ->preload()
                         ->afterStateUpdated(function (callable $get, callable $set, $state) {
                             if ($state) {
                                 $product = \App\Models\Product::find($state);
@@ -147,37 +151,50 @@ class VentaResource extends Resource
                 }),
         ]);
     }
-
-    public static function table(Table $table): Table
+    
+    public static function table(Tables\Table $table): Tables\Table
     {
-        return $table->columns([
-            // Muestra el usuario (vendedor) que realizó la venta.
-            TextColumn::make('user.name')
-                ->label('Vendedor')
-                ->searchable(),
-            // Muestra el cliente asignado.
-            TextColumn::make('cliente.nombre')
-                ->label('Cliente')
-                ->searchable(),
-            // Muestra el total de la venta.
-            TextColumn::make('total')
-                ->label('Total')
-                ->money('USD'),
-            TextColumn::make('created_at')
-                ->dateTime()
-                ->sortable(),
-        ])
-        ->filters([])
-        ->actions([
-            Tables\Actions\EditAction::make(),
-        ])
-        ->bulkActions([
-            Tables\Actions\DeleteBulkAction::make(),
-        ]);
+        return $table
+            ->columns([
+                TextColumn::make('user.name')
+                    ->label('Vendedor')
+                    ->searchable(),
+                TextColumn::make('cliente.nombre')
+                    ->label('Cliente')
+                    ->searchable(),
+                TextColumn::make('total')
+                    ->label('Total')
+                    ->money('USD'),
+                TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable(),
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+                Action::make('Descargar PDF')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(fn ($record) => static::generarPDF($record->id))
+                    ->requiresConfirmation()
+                    ->color('primary'),
+            ]);
     }
 
-    // Filtra la consulta para que solo se muestren las ventas del usuario actual.
-    public static function getEloquentQuery(): Builder
+    public static function generarPDF($ventaId)
+    {
+        $venta = Venta::with(['user', 'cliente', 'detalles.product'])->findOrFail($ventaId);
+
+        // Generar el PDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.venta', compact('venta'));
+
+        // Guardar el PDF temporalmente en storage
+        $filePath = "ventas/venta_{$venta->id}.pdf";
+        Storage::put("public/$filePath", $pdf->output());
+
+        // Retornar la URL del archivo para descarga
+        return response()->download(storage_path("app/private/public/$filePath"));
+    }
+
+     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->where('user_id', auth()->id());
     }
@@ -192,9 +209,9 @@ class VentaResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListVentas::route('/'),
+            'index' => Pages\ListVentas::route('/'),
             'create' => Pages\CreateVenta::route('/create'),
-            'edit'   => Pages\EditVenta::route('/{record}/edit'),
+            'edit' => Pages\EditVenta::route('/{record}/edit'),
         ];
     }
 }
